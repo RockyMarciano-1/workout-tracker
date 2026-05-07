@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>운동 로그</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  background: #f5f1e8;
+  color: #1a1a1a;
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  overscroll-behavior: none;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+body { max-width: 480px; margin: 0 auto; padding-bottom: 90px; }
+
+header {
+  padding: 28px 22px 20px;
+  border-bottom: 2px solid #1a1a1a;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  background: #f5f1e8;
+  position: relative;
+}
+.title-eyebrow { font-size: 11px; letter-spacing: 0.25em; color: #8a8678; font-weight: 600; }
+.title-main { font-size: 36px; font-weight: 800; letter-spacing: -1.2px; margin-top: 6px; line-height: 1; }
+.title-main .accent { color: #d33f2a; font-style: italic; font-size: 22px; margin-left: 6px; font-weight: 600; }
+.date-box { text-align: right; }
+.date-day { font-size: 11px; letter-spacing: 0.2em; font-weight: 600; color: #555; }
+.date-num { font-size: 32px; font-weight: 800; line-height: 1; margin: 4px 0; letter-spacing: -1px; }
+.date-mo { font-size: 11px; letter-spacing: 0.2em; font-weight: 600; color: #555; }
+
+.sync-badge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  padding: 3px 6px;
+  border-radius: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.sync-badge.off { background: #f0ebdf; color: #8a8678; }
+.sync-badge.on { background: #e8f5e9; color: #2e7d32; }
+.sync-badge.syncing { background: #fff3e0; color: #e65100; }
+.sync-badge.error { background: #ffebee; color: #c62828; }
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.sync-badge.syncing .sync-dot { animation: pulse 1s infinite; }
+
+main { padding: 22px; }
+
+.section-label { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+.section-num { font-size: 11px; color: #b8b3a0; font-weight: 600; }
+.section-title { font-size: 20px; font-weight: 800; letter-spacing: -0.6px; }
+.section-sub { font-size: 13px; color: #8a8678; font-weight: 500; }
+
+.icon { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.icon-lg { width: 32px; height: 32px; stroke-width: 1.6; }
+.icon-sm { width: 18px; height: 18px; }
+.icon-xs { width: 14px; height: 14px; stroke-width: 2; }
+
+.empty {
+  border: 2px dashed #b8b3a0;
+  padding: 36px 16px;
+  text-align: center;
+  color: #8a8678;
+  font-size: 14px;
+}
+.empty-icon { display: flex; justify-content: center; margin-bottom: 12px; color: #b8b3a0; }
+
+.btn { background: #1a1a1a; color: white; border: none; padding: 15px 16px; font-size: 14px; letter-spacing: 0.05em; font-weight: 700; font-family: inherit; cursor: pointer; width: 100%; box-shadow: 2px 2px 0 #1a1a1a; border-radius: 2px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #1a1a1a; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-outline { background: white; color: #1a1a1a; border: 2px solid #1a1a1a; box-shadow: 2px 2px 0 #1a1a1a; }
+.btn-google { background: #4285f4; color: white; }
+.btn-sm { padding: 8px 12px; font-size: 13px; font-weight: 600; width: auto; background: white; color: #1a1a1a; border: 1.5px solid #1a1a1a; cursor: pointer; font-family: inherit; border-radius: 2px; }
+.btn-icon { width: 32px; height: 32px; border: 1.5px solid #1a1a1a; background: white; cursor: pointer; border-radius: 2px; display: flex; align-items: center; justify-content: center; color: #1a1a1a; }
+.btn-row { display: flex; gap: 8px; }
+
+.tabs { display: grid; grid-template-columns: 1fr 1fr; border: 2px solid #1a1a1a; margin-bottom: 18px; border-radius: 2px; overflow: hidden; }
+.tab { padding: 13px 8px; background: white; border: none; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; color: #1a1a1a; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.tab.active { background: #1a1a1a; color: white; }
+
+label.field-label { display: block; font-size: 12px; letter-spacing: 0.1em; color: #555; font-weight: 700; margin-bottom: 6px; margin-top: 14px; }
+input, select, textarea { width: 100%; padding: 14px; border: 2px solid #1a1a1a; background: white; font-size: 16px; font-family: inherit; color: #1a1a1a; border-radius: 2px; }
+input:focus, select:focus { outline: none; }
+.input-row { display: flex; }
+.input-row input { border-right: none; font-size: 24px; font-weight: 700; border-radius: 2px 0 0 2px; }
+.input-row .unit-box { padding: 0 18px; border: 2px solid #1a1a1a; background: #f0ebdf; display: flex; align-items: center; font-size: 15px; font-weight: 600; white-space: nowrap; border-radius: 0 2px 2px 0; }
+
+.card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.summary-card { background: white; border: 2px solid #1a1a1a; padding: 14px; box-shadow: 2px 2px 0 #1a1a1a; border-radius: 2px; }
+.summary-icon { color: #d33f2a; margin-bottom: 4px; }
+.summary-name { font-size: 14px; font-weight: 700; margin-top: 4px; }
+.summary-total { font-size: 32px; font-weight: 800; line-height: 1.1; margin-top: 6px; letter-spacing: -1px; }
+.summary-unit { font-size: 14px; color: #8a8678; margin-left: 4px; font-weight: 500; }
+.summary-sets { font-size: 11px; letter-spacing: 0.15em; color: #b8b3a0; font-weight: 600; margin-top: 6px; }
+
+.list-item { display: flex; justify-content: space-between; align-items: center; background: white; border: 1.5px solid #1a1a1a; padding: 12px 14px; margin-bottom: 8px; border-radius: 2px; }
+.list-left { display: flex; align-items: center; gap: 12px; }
+.list-icon { color: #1a1a1a; }
+.list-name { font-size: 15px; font-weight: 600; }
+.list-time { font-size: 12px; color: #8a8678; font-weight: 500; margin-top: 2px; }
+.list-right { display: flex; align-items: center; gap: 12px; }
+.list-amount { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+
+.plan-card { background: #ebe6d8; border: 2px solid #1a1a1a; padding: 14px; margin-bottom: 8px; border-radius: 2px; }
+.plan-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.plan-name { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.plan-amount { font-size: 13px; font-weight: 600; color: #555; white-space: nowrap; }
+.progress-bar { height: 10px; background: white; border: 1.5px solid #1a1a1a; margin-top: 10px; border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: #d33f2a; transition: width 0.3s; }
+
+.mic-wrapper { text-align: center; padding: 24px 0 16px; }
+.mic-btn { width: 140px; height: 140px; border-radius: 50%; border: 4px solid #1a1a1a; background: white; box-shadow: 4px 4px 0 #1a1a1a; cursor: pointer; font-family: inherit; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #1a1a1a; }
+.mic-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #1a1a1a; }
+.mic-btn.listening { background: #d33f2a; color: white; animation: pulse 1.2s infinite; }
+.mic-btn .icon { width: 44px; height: 44px; stroke-width: 1.6; }
+.mic-label { font-size: 12px; letter-spacing: 0.15em; font-weight: 700; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+.hint { text-align: center; font-size: 13px; color: #8a8678; font-weight: 500; margin: 12px 0 4px; }
+.error-box { background: #d33f2a; color: white; padding: 13px; font-size: 13px; font-weight: 600; margin: 14px 0; border-radius: 2px; }
+.success-msg { text-align: center; color: #d33f2a; font-size: 13px; font-weight: 600; margin-top: 12px; }
+.parsed-box { background: white; border: 2px solid #1a1a1a; padding: 18px; margin-top: 14px; border-radius: 2px; }
+.parsed-label { font-size: 11px; letter-spacing: 0.2em; color: #8a8678; font-weight: 700; }
+.parsed-text { font-size: 18px; margin-top: 6px; font-weight: 600; }
+.parsed-divider { border-top: 1.5px solid #ddd; margin: 14px 0; padding-top: 14px; }
+
+.stat-table { background: white; border: 2px solid #1a1a1a; margin-top: 14px; border-radius: 2px; overflow: hidden; }
+.stat-header { display: grid; grid-template-columns: 6fr 3fr 3fr; padding: 12px 14px; background: #f0ebdf; border-bottom: 2px solid #1a1a1a; font-size: 11px; letter-spacing: 0.15em; font-weight: 700; color: #555; }
+.stat-row { display: grid; grid-template-columns: 6fr 3fr 3fr; padding: 14px; border-bottom: 1px solid #e8e3d4; align-items: center; }
+.stat-row:last-child { border-bottom: none; }
+.stat-name { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; }
+.stat-num { text-align: right; font-size: 14px; font-weight: 600; color: #555; }
+.stat-total { text-align: right; font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+.stat-total-unit { font-size: 12px; color: #8a8678; margin-left: 3px; font-weight: 500; }
+
+.chart-wrap { background: white; border: 2px solid #1a1a1a; padding: 18px 14px 10px; margin-top: 14px; border-radius: 2px; }
+.chart-title { font-size: 11px; letter-spacing: 0.2em; color: #8a8678; font-weight: 700; margin-bottom: 14px; }
+.chart { display: flex; align-items: flex-end; height: 150px; gap: 3px; border-bottom: 1.5px solid #1a1a1a; padding-bottom: 4px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; position: relative; min-width: 0; }
+.bar { width: 100%; background: #d33f2a; min-height: 1px; position: relative; border-radius: 1px 1px 0 0; }
+.bar-value { position: absolute; top: -16px; font-size: 10px; font-weight: 600; white-space: nowrap; width: 100%; text-align: center; left: 0; color: #1a1a1a; }
+.chart-labels { display: flex; gap: 3px; margin-top: 6px; }
+.chart-label { flex: 1; text-align: center; font-size: 10px; font-weight: 600; color: #8a8678; }
+
+.cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.cal-title { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+.cal-title .month-accent { color: #d33f2a; }
+.cal-week { font-size: 12px; font-weight: 600; margin-left: 8px; color: #8a8678; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.cal-dayhead { text-align: center; font-size: 11px; letter-spacing: 0.15em; font-weight: 700; padding: 8px 0; color: #8a8678; }
+.cal-dayhead.sun { color: #d33f2a; }
+.cal-dayhead.sat { color: #2563eb; }
+.cal-cell { aspect-ratio: 1; border: 1.5px solid #d8d3c0; background: white; position: relative; padding: 5px; cursor: pointer; display: flex; flex-direction: column; font-family: inherit; border-radius: 2px; }
+.cal-cell.empty-cell { border: none; cursor: default; background: transparent; }
+.cal-cell.today { border: 2px solid #d33f2a; }
+.cal-cell.selected { background: #1a1a1a; color: white; border: 2px solid #1a1a1a; }
+.cal-num { font-size: 14px; font-weight: 700; }
+.cal-cell.today .cal-num { color: #d33f2a; }
+.cal-cell.selected .cal-num { color: white; }
+.cal-dots { flex: 1; display: flex; align-items: flex-end; justify-content: center; gap: 3px; padding-bottom: 3px; }
+.cal-dot { width: 6px; height: 6px; border-radius: 50%; background: #d33f2a; }
+.cal-dot.plan { border-radius: 0; background: #1a1a1a; }
+.cal-cell.selected .cal-dot { background: white; }
+.cal-legend { display: flex; gap: 14px; font-size: 12px; font-weight: 500; color: #8a8678; margin-top: 10px; }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 7px; height: 7px; border-radius: 50%; background: #d33f2a; }
+.legend-dot.plan { border-radius: 0; background: #1a1a1a; }
+
+.detail-section { border-top: 2px solid #1a1a1a; margin-top: 18px; padding-top: 18px; }
+.detail-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.detail-date { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+.btn-add-plan { background: #1a1a1a; color: white; border: none; padding: 10px 14px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 2px 2px 0 #1a1a1a; border-radius: 2px; display: flex; align-items: center; gap: 6px; font-family: inherit; }
+
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 100; }
+.modal { background: #f5f1e8; border: 2px solid #1a1a1a; box-shadow: 4px 4px 0 #1a1a1a; max-width: 380px; width: 100%; padding: 22px; border-radius: 2px; max-height: 90vh; overflow-y: auto; }
+.modal-eyebrow { font-size: 11px; letter-spacing: 0.2em; color: #8a8678; font-weight: 700; }
+.modal-title { font-size: 24px; font-weight: 800; margin-bottom: 16px; letter-spacing: -0.5px; }
+.icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; padding: 10px; border: 2px solid #1a1a1a; background: white; border-radius: 2px; }
+.icon-btn { padding: 10px; background: white; border: 1.5px solid transparent; cursor: pointer; border-radius: 2px; display: flex; align-items: center; justify-content: center; color: #1a1a1a; }
+.icon-btn.active { background: #1a1a1a; color: white; border-color: #1a1a1a; }
+
+nav.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #f5f1e8; border-top: 2px solid #1a1a1a; z-index: 50; }
+.nav-inner { max-width: 480px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); }
+.nav-btn { background: none; border: none; padding: 12px 4px 14px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; font-family: inherit; color: #555; }
+.nav-btn.active { background: #1a1a1a; color: white; }
+.nav-btn .icon { width: 22px; height: 22px; stroke-width: 1.8; }
+.nav-label { font-size: 10px; letter-spacing: 0.1em; font-weight: 700; }
+
+.text-center { text-align: center; }
+.muted { color: #8a8678; font-size: 14px; }
+.exercise-list-item { display: flex; justify-content: space-between; align-items: center; background: white; border: 2px solid #1a1a1a; padding: 14px; margin-bottom: 8px; border-radius: 2px; }
+.ex-info { display: flex; align-items: center; gap: 14px; }
+.ex-icon { color: #d33f2a; }
+.ex-name { font-weight: 700; font-size: 16px; }
+.ex-unit { font-size: 12px; color: #8a8678; font-weight: 500; letter-spacing: 0.05em; margin-top: 2px; }
+.divider { border-top: 2px solid #1a1a1a; margin: 28px 0 18px; }
+.data-info { text-align: center; font-size: 12px; color: #b8b3a0; font-weight: 500; margin-top: 10px; }
+
+.sync-card { background: white; border: 2px solid #1a1a1a; padding: 16px; border-radius: 2px; margin-bottom: 12px; box-shadow: 2px 2px 0 #1a1a1a; }
+.sync-status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.sync-status-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sync-status-icon.connected { background: #e8f5e9; color: #2e7d32; }
+.sync-status-icon.disconnected { background: #f0ebdf; color: #8a8678; }
+.sync-status-text { flex: 1; }
+.sync-status-title { font-size: 15px; font-weight: 700; }
+.sync-status-sub { font-size: 12px; color: #8a8678; font-weight: 500; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+  <symbol id="i-run" viewBox="0 0 24 24"><circle cx="14" cy="4" r="2"/><path d="M11 21l1-6 4 2 3-3"/><path d="M5 16l4-4 3 3 5-3"/><path d="M5 10h2l3-3 3 1"/></symbol>
+  <symbol id="i-pushup" viewBox="0 0 24 24"><circle cx="6" cy="8" r="1.5"/><path d="M7.5 8l4 1 3-3 4 1"/><path d="M11.5 9l3 5 7 1"/><path d="M11.5 9l-2 5 5 4"/><line x1="2" y1="20" x2="22" y2="20"/></symbol>
+  <symbol id="i-pullup" viewBox="0 0 24 24"><line x1="3" y1="4" x2="21" y2="4"/><line x1="9" y1="4" x2="9" y2="10"/><line x1="15" y1="4" x2="15" y2="10"/><circle cx="12" cy="11" r="2"/><path d="M12 13v5"/><path d="M9 18l3-3 3 3"/></symbol>
+  <symbol id="i-stretch" viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M12 6v6"/><path d="M12 8l-5 3M12 8l5 3"/><path d="M12 12l-3 5-3 3M12 12l3 5 3 3"/></symbol>
+  <symbol id="i-bike" viewBox="0 0 24 24"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6l-3 5L9 8H6"/><path d="M15 6h3l3 11.5"/><path d="M12 11l-2.5 6.5"/></symbol>
+  <symbol id="i-swim" viewBox="0 0 24 24"><circle cx="17" cy="6" r="1.8"/><path d="M2 12c2 1 3 1 5 0s3-1 5 0 3 1 5 0 3-1 5 0"/><path d="M2 17c2 1 3 1 5 0s3-1 5 0 3 1 5 0 3-1 5 0"/><path d="M9 11l3-3 4 2"/></symbol>
+  <symbol id="i-weight" viewBox="0 0 24 24"><rect x="2" y="9" width="3" height="6" rx="0.5"/><rect x="19" y="9" width="3" height="6" rx="0.5"/><rect x="5" y="10.5" width="2" height="3"/><rect x="17" y="10.5" width="2" height="3"/><line x1="7" y1="12" x2="17" y2="12" stroke-width="2.5"/></symbol>
+  <symbol id="i-yoga" viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M12 6v6"/><path d="M12 8l-5 2 5 1 5-1-5-2"/><path d="M12 12l-7 8h14l-7-8z"/></symbol>
+  <symbol id="i-walk" viewBox="0 0 24 24"><circle cx="13" cy="4" r="2"/><path d="M10 21l1-7 3 1 2-4"/><path d="M7 14l3-3 1-3 4 2"/></symbol>
+  <symbol id="i-jump" viewBox="0 0 24 24"><circle cx="12" cy="3" r="1.8"/><path d="M12 5v5l-3 3v5"/><path d="M12 10l3 3v5"/><line x1="4" y1="22" x2="20" y2="22"/><path d="M8 22l1-2M16 22l-1-2"/></symbol>
+  <symbol id="i-soccer" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polygon points="12,8 15,10 14,14 10,14 9,10"/><line x1="12" y1="3" x2="12" y2="8"/><line x1="15" y1="10" x2="20" y2="9"/><line x1="14" y1="14" x2="17" y2="19"/><line x1="10" y1="14" x2="7" y2="19"/><line x1="9" y1="10" x2="4" y2="9"/></symbol>
+  <symbol id="i-basket" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3v18"/><path d="M5 6c4 3 4 9 0 12M19 6c-4 3-4 9 0 12"/></symbol>
+  <symbol id="i-mountain" viewBox="0 0 24 24"><path d="M2 20l7-12 4 7 3-4 6 9z"/><circle cx="17" cy="6" r="1.5"/></symbol>
+  <symbol id="i-tennis" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3.5 8c5 0 9 4 9 9M20.5 16c-5 0-9-4-9-9"/></symbol>
+  <symbol id="i-golf" viewBox="0 0 24 24"><path d="M10 3v14"/><path d="M10 5l8 3-8 3"/><ellipse cx="12" cy="20" rx="6" ry="1.5"/><circle cx="14" cy="18" r="1"/></symbol>
+  <symbol id="i-dumbbell" viewBox="0 0 24 24"><rect x="3" y="9" width="2.5" height="6" rx="0.5"/><rect x="18.5" y="9" width="2.5" height="6" rx="0.5"/><line x1="5.5" y1="12" x2="18.5" y2="12" stroke-width="3"/></symbol>
+  <symbol id="i-meditation" viewBox="0 0 24 24"><circle cx="12" cy="6" r="2"/><path d="M12 8v4"/><path d="M12 12c-3 0-6 2-7 6h14c-1-4-4-6-7-6z"/><path d="M5 14l-2 2M19 14l2 2"/></symbol>
+  <symbol id="i-boxing" viewBox="0 0 24 24"><path d="M7 8c0-2 2-3 4-3s4 1 4 3v4l3 1v6c0 1-1 2-2 2H8c-1 0-2-1-2-2v-6l1-1V8z"/><path d="M11 5V3h2v2"/></symbol>
+  <symbol id="i-skip" viewBox="0 0 24 24"><circle cx="12" cy="4" r="1.8"/><path d="M12 6v5l-2 4v5"/><path d="M12 11l3 4v5"/><path d="M3 14c2-3 5-3 9-3s7 0 9 3"/></symbol>
+  <symbol id="i-default" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  
+  <symbol id="ui-today" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></symbol>
+  <symbol id="ui-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="ui-stats" viewBox="0 0 24 24"><line x1="4" y1="20" x2="4" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="20" y1="20" x2="20" y2="14"/></symbol>
+  <symbol id="ui-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="1"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></symbol>
+  <symbol id="ui-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+  <symbol id="ui-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></symbol>
+  <symbol id="ui-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+  <symbol id="ui-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+  <symbol id="ui-chevron-l" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+  <symbol id="ui-chevron-r" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
+  <symbol id="ui-arrow-r" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+  <symbol id="ui-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="ui-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+  <symbol id="ui-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="ui-empty" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></symbol>
+  <symbol id="ui-cloud" viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></symbol>
+  <symbol id="ui-cloud-off" viewBox="0 0 24 24"><path d="M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0 4 15h9a5 5 0 0 0 1.7-.3"/><line x1="1" y1="1" x2="23" y2="23"/></symbol>
+  <symbol id="ui-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></symbol>
+  <symbol id="ui-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+</defs>
+</svg>
+
+<header>
+  <div>
+    <div class="title-eyebrow">DAILY · LOG</div>
+    <div class="title-main">운동<span class="accent">log</span></div>
+  </div>
+  <div class="date-box">
+    <div class="date-day" id="hdrDay"></div>
+    <div class="date-num" id="hdrNum"></div>
+    <div class="date-mo" id="hdrMo"></div>
+  </div>
+  <div class="sync-badge off" id="syncBadge"><div class="sync-dot"></div><span id="syncText">로컬</span></div>
+</header>
+
+<main id="main"></main>
+
+<nav class="bottom-nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" data-tab="today"><svg class="icon"><use href="#ui-today"/></svg><span class="nav-label">TODAY</span></button>
+    <button class="nav-btn" data-tab="log"><svg class="icon"><use href="#ui-plus"/></svg><span class="nav-label">LOG</span></button>
+    <button class="nav-btn" data-tab="stats"><svg class="icon"><use href="#ui-stats"/></svg><span class="nav-label">STATS</span></button>
+    <button class="nav-btn" data-tab="cal"><svg class="icon"><use href="#ui-cal"/></svg><span class="nav-label">CAL</span></button>
+    <button class="nav-btn" data-tab="ex"><svg class="icon"><use href="#ui-settings"/></svg><span class="nav-label">EX</span></button>
+  </div>
+</nav>
+
+<script>
+// ============== GOOGLE DRIVE CONFIG ==============
+var GOOGLE_CLIENT_ID = '169158447839-kvi5m5i7moop2vdjbqjtlhvr6trnb8a4.apps.googleusercontent.com';
+var GOOGLE_API_KEY = 'AIzaSyAR6jVAqlYYmFrwLVDYSVQcK0sQnhpwYS4';
+var GOOGLE_SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
+var DRIVE_FILE_NAME = 'workout_data.json';
+
+// ============== STATE ==============
+var STORAGE_KEY = 'workout_tracker_v3';
+var TOKEN_KEY = 'workout_drive_token';
+var FILEID_KEY = 'workout_drive_fileid';
+
+var state = loadState();
+var currentTab = 'today';
+var logMode = 'voice';
+var voiceText = '';
+var parsed = null;
+var voiceError = '';
+var voiceStatus = 'idle';
+var recog = null;
+var statsPeriod = '7';
+var statsExId = 'all';
+var calView = 'month';
+var calCursor = new Date();
+var calSelected = todayStr();
+var modalHtml = null;
+var editForm = null;
+
+// Drive state
+var gapiLoaded = false;
+var gisLoaded = false;
+var tokenClient = null;
+var accessToken = null;
+var driveFileId = null;
+var syncStatus = 'off'; // off | on | syncing | error
+var syncMessage = '로컬';
+var pendingSyncTimer = null;
+
+// === ICON KEYWORD MAPPING ===
+var ICON_KEYWORDS = [
+  { icon: 'i-run', kw: ['런닝','러닝','달리기','조깅','마라톤','run','jog'] },
+  { icon: 'i-walk', kw: ['걷기','산책','워킹','walk'] },
+  { icon: 'i-pushup', kw: ['푸쉬업','푸시업','팔굽혀','push'] },
+  { icon: 'i-pullup', kw: ['턱걸이','풀업','친업','pull','chin'] },
+  { icon: 'i-stretch', kw: ['스트레칭','stretch'] },
+  { icon: 'i-yoga', kw: ['요가','yoga'] },
+  { icon: 'i-meditation', kw: ['명상','참선','meditation'] },
+  { icon: 'i-bike', kw: ['자전거','싸이클','사이클','라이딩','bike','cycling'] },
+  { icon: 'i-swim', kw: ['수영','swim'] },
+  { icon: 'i-mountain', kw: ['등산','하이킹','산행','climb','hik'] },
+  { icon: 'i-jump', kw: ['점프','버피','burpee','jump'] },
+  { icon: 'i-skip', kw: ['줄넘기','rope','skip'] },
+  { icon: 'i-soccer', kw: ['축구','풋볼','soccer','football'] },
+  { icon: 'i-basket', kw: ['농구','basket'] },
+  { icon: 'i-tennis', kw: ['테니스','배드민턴','tennis','badminton'] },
+  { icon: 'i-golf', kw: ['골프','golf'] },
+  { icon: 'i-boxing', kw: ['복싱','권투','boxing','킥복싱'] },
+  { icon: 'i-weight', kw: ['스쿼트','squat','데드','dead','벤치','bench','웨이트','weight','역도'] },
+  { icon: 'i-dumbbell', kw: ['덤벨','아령','컬','curl','dumbbell'] },
+];
+
+function autoIcon(name) {
+  if (!name) return 'i-default';
+  var lower = name.toLowerCase();
+  for (var i = 0; i < ICON_KEYWORDS.length; i++) {
+    var item = ICON_KEYWORDS[i];
+    for (var j = 0; j < item.kw.length; j++) {
+      if (lower.indexOf(item.kw[j].toLowerCase()) !== -1) return item.icon;
+    }
+  }
+  return 'i-default';
+}
+
+function iconSvg(id, cls) {
+  return '<svg class="icon ' + (cls||'') + '"><use href="#' + (id || 'i-default') + '"/></svg>';
+}
+
+function loadState() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      var s = JSON.parse(raw);
+      s.exercises = s.exercises.map(function(e){
+        if (!e.icon) e.icon = autoIcon(e.name);
+        return e;
+      });
+      if (!s.lastModified) s.lastModified = Date.now();
+      return s;
+    }
+  } catch (e) {}
+  return {
+    exercises: [
+      { id:'e1', name:'런닝', unit:'km', icon:'i-run' },
+      { id:'e2', name:'푸쉬업', unit:'개', icon:'i-pushup' },
+      { id:'e3', name:'턱걸이', unit:'개', icon:'i-pullup' },
+      { id:'e4', name:'스트레칭', unit:'분', icon:'i-stretch' }
+    ],
+    records: [],
+    plans: [],
+    lastModified: Date.now()
+  };
+}
+
+function save() {
+  state.lastModified = Date.now();
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e){}
+  scheduleSync();
+}
+
+// ============== DRIVE SYNC ==============
+function setSyncStatus(status, msg) {
+  syncStatus = status;
+  syncMessage = msg;
+  var el = document.getElementById('syncBadge');
+  var txt = document.getElementById('syncText');
+  if (el) {
+    el.className = 'sync-badge ' + status;
+    txt.textContent = msg;
+  }
+}
+
+function gapiInit() {
+  gapi.load('client', function() {
+    gapi.client.init({
+      apiKey: GOOGLE_API_KEY,
+      discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+    }).then(function() {
+      gapiLoaded = true;
+      tryAutoConnect();
+    }).catch(function(e) {
+      console.error('gapi init error', e);
+      setSyncStatus('error', 'API 오류');
+    });
+  });
+}
+
+function gisInit() {
+  try {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: GOOGLE_SCOPES,
+      callback: '' // set per-request
+    });
+    gisLoaded = true;
+    tryAutoConnect();
+  } catch (e) {
+    console.error('gis init error', e);
+    setSyncStatus('error', '인증 오류');
+  }
+}
+
+function tryAutoConnect() {
+  if (!gapiLoaded || !gisLoaded) return;
+  // Try restore previous token
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem(TOKEN_KEY) || 'null'); } catch(e) {}
+  if (saved && saved.expires_at && saved.expires_at > Date.now() + 60000) {
+    accessToken = saved.access_token;
+    gapi.client.setToken({ access_token: accessToken });
+    driveFileId = localStorage.getItem(FILEID_KEY) || null;
+    setSyncStatus('on', '연결됨');
+    pullFromDrive();
+  } else {
+    setSyncStatus('off', '로컬');
+  }
+}
+
+function connectDrive() {
+  if (!gisLoaded || !gapiLoaded) {
+    alert('Google API가 아직 로드 중입니다. 잠시 후 다시 시도해 주세요.');
+    return;
+  }
+  setSyncStatus('syncing', '인증 중...');
+  tokenClient.callback = function(resp) {
+    if (resp.error) {
+      setSyncStatus('error', '인증 실패');
+      alert('인증 실패: ' + resp.error);
+      return;
+    }
+    accessToken = resp.access_token;
+    var expiresAt = Date.now() + (resp.expires_in || 3600) * 1000;
+    try {
+      localStorage.setItem(TOKEN_KEY, JSON.stringify({
+        access_token: accessToken,
+        expires_at: expiresAt
+      }));
+    } catch(e){}
+    setSyncStatus('on', '연결됨');
+    findOrCreateFile().then(function(){
+      pullFromDrive();
+    });
+  };
+  tokenClient.requestAccessToken({ prompt: 'consent' });
+}
+
+function disconnectDrive() {
+  if (!confirm('Google Drive 연결을 해제할까요? 로컬 데이터는 유지됩니다.')) return;
+  if (accessToken) {
+    try { google.accounts.oauth2.revoke(accessToken, function(){}); } catch(e){}
+  }
+  accessToken = null;
+  driveFileId = null;
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(FILEID_KEY);
+  setSyncStatus('off', '로컬');
+  render();
+}
+
+function findOrCreateFile() {
+  return gapi.client.drive.files.list({
+    spaces: 'appDataFolder',
+    q: "name='" + DRIVE_FILE_NAME + "'",
+    fields: 'files(id, name, modifiedTime)'
+  }).then(function(res) {
+    var files = res.result.files || [];
+    if (files.length > 0) {
+      driveFileId = files[0].id;
+      try { localStorage.setItem(FILEID_KEY, driveFileId); } catch(e){}
+      return driveFileId;
+    } else {
+      return gapi.client.drive.files.create({
+        resource: {
+          name: DRIVE_FILE_NAME,
+          parents: ['appDataFolder']
+        },
+        fields: 'id'
+      }).then(function(res2) {
+        driveFileId = res2.result.id;
+        try { localStorage.setItem(FILEID_KEY, driveFileId); } catch(e){}
+        return driveFileId;
+      });
+    }
+  });
+}
+
+function pullFromDrive() {
+  if (!driveFileId || !accessToken) return Promise.resolve();
+  setSyncStatus('syncing', '불러오는 중');
+  return gapi.client.drive.files.get({
+    fileId: driveFileId,
+    alt: 'media'
+  }).then(function(res) {
+    var remoteData;
+    try {
+      remoteData = typeof res.result === 'string' ? JSON.parse(res.result) : res.result;
+    } catch(e) {
+      remoteData = null;
+    }
+    if (remoteData && remoteData.exercises && remoteData.lastModified) {
+      // Compare with local
+      if (!state.lastModified || remoteData.lastModified > state.lastModified) {
+        // Remote is newer
+        state = remoteData;
+        if (!state.plans) state.plans = [];
+        state.exercises = state.exercises.map(function(e){
+          if (!e.icon) e.icon = autoIcon(e.name);
+          return e;
+        });
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e){}
+        render();
+      } else if (state.lastModified > remoteData.lastModified) {
+        // Local is newer, push it up
+        return pushToDrive();
+      }
+    } else {
+      // Empty file, push local data
+      return pushToDrive();
+    }
+    setSyncStatus('on', '동기화됨');
+  }).catch(function(e) {
+    console.error('pull error', e);
+    // File might not exist or empty
+    if (e.status === 404 || (e.result && e.result.error && e.result.error.code === 404)) {
+      // Recreate
+      driveFileId = null;
+      localStorage.removeItem(FILEID_KEY);
+      return findOrCreateFile().then(pushToDrive);
+    }
+    setSyncStatus('error', '동기화 오류');
+  });
+}
+
+function scheduleSync() {
+  if (!accessToken || !driveFileId) return;
+  if (pendingSyncTimer) clearTimeout(pendingSyncTimer);
+  pendingSyncTimer = setTimeout(pushToDrive, 2000);
+}
+
+function pushToDrive() {
+  if (!accessToken || !driveFileId) return Promise.resolve();
+  setSyncStatus('syncing', '저장 중');
+  var content = JSON.stringify(state);
+  return fetch('https://www.googleapis.com/upload/drive/v3/files/' + driveFileId + '?uploadType=media', {
+    method: 'PATCH',
+    headers: {
+      'Authorization': 'Bearer ' + accessToken,
+      'Content-Type': 'application/json'
+    },
+    body: content
+  }).then(function(res) {
+    if (res.ok) {
+      setSyncStatus('on', '동기화됨');
+    } else if (res.status === 401) {
+      // Token expired
+      setSyncStatus('error', '재로그인 필요');
+      accessToken = null;
+      localStorage.removeItem(TOKEN_KEY);
+    } else {
+      setSyncStatus('error', '저장 실패');
+    }
+  }).catch(function(e) {
+    console.error('push error', e);
+    setSyncStatus('error', '네트워크 오류');
+  });
+}
+
+function manualSync() {
+  if (!accessToken) {
+    connectDrive();
+    return;
+  }
+  pullFromDrive();
+}
+
+// Wait for both libraries to load
+function checkLibsLoaded() {
+  if (typeof gapi !== 'undefined' && !gapiLoaded) gapiInit();
+  if (typeof google !== 'undefined' && google.accounts && !gisLoaded) gisInit();
+  if (!gapiLoaded || !gisLoaded) setTimeout(checkLibsLoaded, 200);
+}
+setTimeout(checkLibsLoaded, 500);
+
+// ============== DATE UTIL ==============
+function pad(n) { return String(n).padStart(2, '0'); }
+function fmtDate(d) { return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+function parseDateStr(s) { var p = s.split('-').map(Number); return new Date(p[0], p[1]-1, p[2]); }
+function todayStr() { return fmtDate(new Date()); }
+function addDays(d, n) { var x = new Date(d); x.setDate(x.getDate()+n); return x; }
+function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+function endOfMonth(d) { return new Date(d.getFullYear(), d.getMonth()+1, 0); }
+function startOfWeek(d) { var x = new Date(d); x.setDate(x.getDate() - x.getDay()); return x; }
+function nowTime() { var d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+
+function renderHeader() {
+  var d = new Date();
+  var days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  var months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('hdrDay').textContent = days[d.getDay()];
+  document.getElementById('hdrNum').textContent = pad(d.getDate());
+  document.getElementById('hdrMo').textContent = months[d.getMonth()] + ' · ' + d.getFullYear();
+}
+
+function parseVoice(text) {
+  if (!text) return null;
+  var cleaned = text.trim().replace(/\s+/g, ' ');
+  var sorted = state.exercises.slice().sort(function(a,b){ return b.name.length - a.name.length; });
+  var matched = null;
+  for (var i = 0; i < sorted.length; i++) {
+    if (cleaned.indexOf(sorted[i].name) !== -1) { matched = sorted[i]; break; }
+  }
+  if (!matched) {
+    for (var j = 0; j < sorted.length; j++) {
+      var alias = sorted[j].name.substring(0, 2);
+      if (alias.length >= 2 && cleaned.indexOf(alias) !== -1) { matched = sorted[j]; break; }
+    }
+  }
+  if (!matched) return null;
+  var m = cleaned.match(/(\d+(?:\.\d+)?)/);
+  if (!m) return null;
+  return { exerciseId: matched.id, amount: parseFloat(m[1]), name: matched.name, unit: matched.unit, icon: matched.icon };
+}
+
+function esc(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; });
+}
+
+function render() {
+  var main = document.getElementById('main');
+  var html = '';
+  if (currentTab === 'today') html = renderToday();
+  else if (currentTab === 'log') html = renderLog();
+  else if (currentTab === 'stats') html = renderStats();
+  else if (currentTab === 'cal') html = renderCalendar();
+  else if (currentTab === 'ex') html = renderExercises();
+  main.innerHTML = html;
+  
+  document.querySelectorAll('.modal-bg').forEach(function(m){ m.remove(); });
+  if (modalHtml) document.body.insertAdjacentHTML('beforeend', modalHtml);
+  
+  document.querySelectorAll('.nav-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.tab === currentTab);
+  });
+  
+  if (currentTab === 'log' && logMode === 'manual') {
+    var sel = document.getElementById('manualEx');
+    if (sel) sel.addEventListener('change', function() {
+      var ex = state.exercises.find(function(e){ return e.id === sel.value; });
+      var u = document.getElementById('manualUnit');
+      if (u) u.textContent = ex ? ex.unit : '';
+    });
+  }
+}
+
+function renderToday() {
+  var today = todayStr();
+  var recs = state.records.filter(function(r){ return r.date === today; });
+  var plans = state.plans.filter(function(p){ return p.date === today; });
+  var sumMap = {};
+  recs.forEach(function(r){
+    var ex = state.exercises.find(function(e){ return e.id === r.exerciseId; });
+    if (!ex) return;
+    if (!sumMap[ex.id]) sumMap[ex.id] = { ex: ex, total: 0, count: 0 };
+    sumMap[ex.id].total += r.amount;
+    sumMap[ex.id].count++;
+  });
+  var summary = Object.keys(sumMap).map(function(k){ return sumMap[k]; });
+  
+  var html = '<div class="section-label"><span class="section-num">01</span><span class="section-title">TODAY</span><span class="section-sub">— 오늘의 기록</span></div>';
+  
+  if (summary.length === 0) {
+    html += '<div class="empty"><div class="empty-icon">' + iconSvg('ui-empty', 'icon-lg') + '</div><div>아직 기록이 없습니다</div></div>';
+  } else {
+    html += '<div class="card-grid">';
+    summary.forEach(function(s){
+      var total = s.total % 1 === 0 ? s.total : s.total.toFixed(1);
+      html += '<div class="summary-card">' +
+        '<div class="summary-icon">' + iconSvg(s.ex.icon, 'icon-lg') + '</div>' +
+        '<div class="summary-name">' + esc(s.ex.name) + '</div>' +
+        '<div class="summary-total">' + total + '<span class="summary-unit">' + esc(s.ex.unit) + '</span></div>' +
+        '<div class="summary-sets">×' + s.count + ' SET' + (s.count>1?'S':'') + '</div>' +
+        '</div>';
+    });
+    html += '</div>';
+  }
+  
+  if (plans.length > 0) {
+    html += '<div style="margin-top:28px;"><div class="section-label"><span class="section-num">02</span><span class="section-title">PLAN</span><span class="section-sub">— 오늘의 계획</span></div>';
+    plans.forEach(function(p){
+      var ex = state.exercises.find(function(e){ return e.id === p.exerciseId; });
+      if (!ex) return;
+      var done = sumMap[ex.id] ? sumMap[ex.id].total : 0;
+      var pct = Math.min(100, (done / p.amount) * 100);
+      html += '<div class="plan-card">' +
+        '<div class="plan-head">' +
+        '<div class="plan-name">' + iconSvg(ex.icon, 'icon-sm') + esc(ex.name) + '</div>' +
+        '<div class="plan-amount">' + done + ' / ' + p.amount + ' ' + esc(ex.unit) + '</div>' +
+        '</div>' +
+        '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+        '</div>';
+    });
+    html += '</div>';
+  }
+  
+  var logSec = plans.length > 0 ? '03' : '02';
+  html += '<div style="margin-top:28px;"><div class="section-label"><span class="section-num">' + logSec + '</span><span class="section-title">LOG</span><span class="section-sub">— 시간순 기록</span></div>';
+  if (recs.length === 0) {
+    html += '<div class="text-center muted" style="padding:18px;">— 없음 —</div>';
+  } else {
+    recs.slice().reverse().forEach(function(r){
+      var ex = state.exercises.find(function(e){ return e.id === r.exerciseId; });
+      if (!ex) return;
+      html += '<div class="list-item">' +
+        '<div class="list-left"><span class="list-icon">' + iconSvg(ex.icon) + '</span>' +
+        '<div><div class="list-name">' + esc(ex.name) + '</div><div class="list-time">' + esc(r.time) + '</div></div></div>' +
+        '<div class="list-right"><div class="list-amount">' + r.amount + '<span class="summary-unit">' + esc(ex.unit) + '</span></div>' +
+        '<button class="btn-icon" onclick="deleteRecord(\'' + r.id + '\')">' + iconSvg('ui-x', 'icon-sm') + '</button></div>' +
+        '</div>';
+    });
+  }
+  html += '</div>';
+  return html;
+}
+
+function deleteRecord(id) {
+  if (!confirm('이 기록을 삭제할까요?')) return;
+  state.records = state.records.filter(function(r){ return r.id !== id; });
+  save(); render();
+}
+
+function renderLog() {
+  var html = '<div class="section-label"><span class="section-num">01</span><span class="section-title">INPUT</span><span class="section-sub">— 운동 기록 입력</span></div>';
+  html += '<div class="tabs">' +
+    '<button class="tab ' + (logMode==='voice'?'active':'') + '" onclick="setLogMode(\'voice\')">' + iconSvg('ui-mic', 'icon-sm') + '음성</button>' +
+    '<button class="tab ' + (logMode==='manual'?'active':'') + '" onclick="setLogMode(\'manual\')">' + iconSvg('ui-edit', 'icon-sm') + '수동입력</button>' +
+    '</div>';
+  
+  if (logMode === 'voice') {
+    var isListening = voiceStatus === 'listening';
+    html += '<div class="mic-wrapper">' +
+      '<button class="mic-btn ' + (isListening?'listening':'') + '" onclick="toggleVoice()">' +
+      iconSvg('ui-mic') +
+      '<div class="mic-label">' + (isListening?'듣는 중':'눌러서 말하기') + '</div>' +
+      '</button></div>' +
+      '<div class="hint">예) "런닝 10킬로", "푸쉬업 40개", "스트레칭 15분"</div>';
+    
+    if (voiceError) html += '<div class="error-box">' + esc(voiceError) + '</div>';
+    if (voiceText) {
+      html += '<div class="parsed-box"><div class="parsed-label">들은 내용</div><div class="parsed-text">' + esc(voiceText) + '</div>';
+      if (parsed) {
+        html += '<div class="parsed-divider">' +
+          '<div class="parsed-label" style="color:#d33f2a;">인식 결과</div>' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;">' +
+          '<div style="font-weight:700;font-size:17px;display:flex;align-items:center;gap:8px;">' + iconSvg(parsed.icon || 'i-default', 'icon-sm') + esc(parsed.name) + '</div>' +
+          '<div style="font-size:28px;font-weight:800;letter-spacing:-1px;">' + parsed.amount + '<span class="summary-unit">' + esc(parsed.unit) + '</span></div>' +
+          '</div>' +
+          '<button class="btn" style="margin-top:14px;" onclick="saveVoice()">' + iconSvg('ui-arrow-r', 'icon-sm') + '저장</button>' +
+          '</div>';
+      } else if (voiceStatus === 'idle') {
+        html += '<div class="parsed-divider" style="color:#d33f2a;font-size:13px;font-weight:600;">운동 종류와 숫자를 인식하지 못했습니다</div>';
+      }
+      html += '</div>';
+    }
+  } else {
+    var sel = state.exercises[0];
+    var opts = state.exercises.map(function(e){
+      return '<option value="' + esc(e.id) + '">' + esc(e.name) + ' (' + esc(e.unit) + ')</option>';
+    }).join('');
+    html += '<label class="field-label">운동</label>' +
+      '<select id="manualEx">' + opts + '</select>' +
+      '<label class="field-label">운동량</label>' +
+      '<div class="input-row">' +
+      '<input type="number" inputmode="decimal" id="manualAmt" placeholder="0">' +
+      '<div class="unit-box" id="manualUnit">' + (sel ? esc(sel.unit) : '') + '</div>' +
+      '</div>' +
+      '<div style="margin-top:18px;"><button class="btn" onclick="saveManual()">' + iconSvg('ui-arrow-r', 'icon-sm') + '기록 저장</button></div>' +
+      '<div id="manualMsg"></div>';
+  }
+  return html;
+}
+
+function setLogMode(m) { logMode = m; voiceText=''; parsed=null; voiceError=''; render(); }
+
+function toggleVoice() {
+  if (voiceStatus === 'listening') {
+    if (recog) recog.stop();
+    return;
+  }
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    voiceError = '이 브라우저는 음성인식을 지원하지 않습니다. Chrome 또는 Edge를 사용해 주세요.';
+    render();
+    return;
+  }
+  voiceError = ''; voiceText = ''; parsed = null;
+  recog = new SR();
+  recog.lang = 'ko-KR';
+  recog.interimResults = true;
+  recog.continuous = false;
+  recog.onstart = function(){ voiceStatus = 'listening'; render(); };
+  recog.onresult = function(e){
+    var txt = '';
+    for (var i = 0; i < e.results.length; i++) txt += e.results[i][0].transcript;
+    voiceText = txt;
+    parsed = parseVoice(txt);
+    render();
+  };
+  recog.onerror = function(e){
+    voiceStatus = 'idle';
+    voiceError = '음성인식 오류: ' + e.error;
+    render();
+  };
+  recog.onend = function(){ voiceStatus = 'idle'; render(); };
+  try { recog.start(); } catch(e) { voiceError = '시작 실패: ' + e.message; render(); }
+}
+
+function saveVoice() {
+  if (!parsed) return;
+  state.records.push({
+    id: 'r' + Date.now(),
+    exerciseId: parsed.exerciseId,
+    amount: parsed.amount,
+    date: todayStr(),
+    time: nowTime()
+  });
+  var msg = '저장됨: ' + parsed.name + ' ' + parsed.amount + parsed.unit;
+  voiceText=''; parsed=null; voiceError=''; save(); render();
+  alert(msg);
+}
+
+function saveManual() {
+  var exId = document.getElementById('manualEx').value;
+  var amtStr = document.getElementById('manualAmt').value;
+  var num = parseFloat(amtStr);
+  var msgEl = document.getElementById('manualMsg');
+  if (!exId || !amtStr || isNaN(num) || num <= 0) {
+    msgEl.innerHTML = '<div class="success-msg">올바른 운동량을 입력하세요</div>';
+    return;
+  }
+  var ex = state.exercises.find(function(e){ return e.id === exId; });
+  state.records.push({
+    id: 'r' + Date.now(),
+    exerciseId: exId,
+    amount: num,
+    date: todayStr(),
+    time: nowTime()
+  });
+  save();
+  msgEl.innerHTML = '<div class="success-msg">✓ ' + esc(ex.name) + ' ' + num + esc(ex.unit) + ' 저장됨</div>';
+  document.getElementById('manualAmt').value = '';
+  setTimeout(function(){ if (currentTab==='log') render(); }, 1500);
+}
+
+function renderStats() {
+  var days = parseInt(statsPeriod);
+  var today = new Date();
+  var startD = addDays(today, -(days-1));
+  startD.setHours(0,0,0,0);
+  
+  var daily = [];
+  for (var i = 0; i < days; i++) {
+    var d = addDays(startD, i);
+    var ds = fmtDate(d);
+    var recs = state.records.filter(function(r){
+      return r.date === ds && (statsExId === 'all' || r.exerciseId === statsExId);
+    });
+    var total = recs.reduce(function(s,r){ return s+r.amount; }, 0);
+    daily.push({ label: (d.getMonth()+1)+'/'+d.getDate(), total: Math.round(total*10)/10 });
+  }
+  var maxVal = Math.max.apply(null, daily.map(function(d){ return d.total; }).concat([1]));
+  
+  var exMap = {};
+  state.records.forEach(function(r){
+    if (parseDateStr(r.date) < startD) return;
+    var ex = state.exercises.find(function(e){ return e.id === r.exerciseId; });
+    if (!ex) return;
+    if (!exMap[ex.id]) exMap[ex.id] = { ex: ex, total: 0, count: 0 };
+    exMap[ex.id].total += r.amount;
+    exMap[ex.id].count++;
+  });
+  var byEx = Object.keys(exMap).map(function(k){ return exMap[k]; }).sort(function(a,b){ return b.count - a.count; });
+  
+  var html = '<div class="section-label"><span class="section-num">01</span><span class="section-title">STATS</span><span class="section-sub">— 기간별 통계</span></div>';
+  html += '<div class="tabs" style="grid-template-columns:1fr 1fr 1fr;">';
+  ['7','30','90'].forEach(function(p){
+    html += '<button class="tab ' + (statsPeriod===p?'active':'') + '" onclick="setPeriod(\'' + p + '\')">' + p + '일</button>';
+  });
+  html += '</div>';
+  
+  var exOpts = state.exercises.map(function(e){
+    return '<option value="' + esc(e.id) + '"' + (statsExId===e.id?' selected':'') + '>' + esc(e.name) + '</option>';
+  }).join('');
+  html += '<select onchange="setStatsEx(this.value)" style="margin-bottom:14px;">' +
+    '<option value="all"' + (statsExId==='all'?' selected':'') + '>전체 운동</option>' + exOpts + '</select>';
+  
+  html += '<div class="chart-wrap"><div class="chart-title">DAILY TREND</div><div class="chart">';
+  daily.forEach(function(d){
+    var h = d.total > 0 ? Math.max(2, (d.total / maxVal) * 100) : 0;
+    html += '<div class="bar-col"><div class="bar" style="height:' + h + '%;">' +
+      (d.total>0 ? '<div class="bar-value">' + d.total + '</div>' : '') +
+      '</div></div>';
+  });
+  html += '</div><div class="chart-labels">';
+  daily.forEach(function(d, i){
+    var showLabel = days <= 14 || i % Math.ceil(days/10) === 0;
+    html += '<div class="chart-label">' + (showLabel?d.label:'') + '</div>';
+  });
+  html += '</div></div>';
+  
+  html += '<div style="margin-top:28px;"><div class="section-label"><span class="section-num">02</span><span class="section-title">BREAKDOWN</span><span class="section-sub">— 운동별 합계</span></div>';
+  html += '<div class="stat-table"><div class="stat-header"><div>운동</div><div style="text-align:right;">횟수</div><div style="text-align:right;">합계</div></div>';
+  if (byEx.length === 0) {
+    html += '<div class="text-center muted" style="padding:28px;">— 기록 없음 —</div>';
+  } else {
+    byEx.forEach(function(b){
+      var total = b.total % 1 === 0 ? b.total : b.total.toFixed(1);
+      html += '<div class="stat-row">' +
+        '<div class="stat-name">' + iconSvg(b.ex.icon, 'icon-sm') + '<span>' + esc(b.ex.name) + '</span></div>' +
+        '<div class="stat-num">' + b.count + '</div>' +
+        '<div class="stat-total">' + total + '<span class="stat-total-unit">' + esc(b.ex.unit) + '</span></div>' +
+        '</div>';
+    });
+  }
+  html += '</div></div>';
+  return html;
+}
+
+function setPeriod(p) { statsPeriod = p; render(); }
+function setStatsEx(v) { statsExId = v; render(); }
+
+function renderCalendar() {
+  var months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  var dayLabels = ['일','월','화','수','목','금','토'];
+  
+  var cells = [];
+  if (calView === 'month') {
+    var start = startOfMonth(calCursor);
+    var end = endOfMonth(calCursor);
+    for (var i = 0; i < start.getDay(); i++) cells.push(null);
+    for (var j = 1; j <= end.getDate(); j++) cells.push(new Date(calCursor.getFullYear(), calCursor.getMonth(), j));
+  } else {
+    var ws = startOfWeek(calCursor);
+    for (var k = 0; k < 7; k++) cells.push(addDays(ws, k));
+  }
+  
+  var html = '<div class="section-label"><span class="section-num">01</span><span class="section-title">CALENDAR</span><span class="section-sub">— 달력 / 일정</span></div>';
+  html += '<div class="tabs">' +
+    '<button class="tab ' + (calView==='month'?'active':'') + '" onclick="setCalView(\'month\')">월간</button>' +
+    '<button class="tab ' + (calView==='week'?'active':'') + '" onclick="setCalView(\'week\')">주간</button>' +
+    '</div>';
+  
+  html += '<div class="cal-nav">' +
+    '<button class="btn-icon" onclick="calPrev()">' + iconSvg('ui-chevron-l', 'icon-sm') + '</button>' +
+    '<div class="cal-title">' + calCursor.getFullYear() + ' <span class="month-accent">' + months[calCursor.getMonth()] + '</span>' +
+    (calView==='week' ? '<span class="cal-week">W' + Math.ceil(calCursor.getDate()/7) + '</span>' : '') + '</div>' +
+    '<button class="btn-icon" onclick="calNext()">' + iconSvg('ui-chevron-r', 'icon-sm') + '</button>' +
+    '</div>';
+  
+  html += '<div class="cal-grid">';
+  dayLabels.forEach(function(dl, i){
+    var cls = i===0?'sun':(i===6?'sat':'');
+    html += '<div class="cal-dayhead ' + cls + '">' + dl + '</div>';
+  });
+  cells.forEach(function(c){
+    if (!c) { html += '<div class="cal-cell empty-cell"></div>'; return; }
+    var ds = fmtDate(c);
+    var hasRec = state.records.some(function(r){ return r.date === ds; });
+    var hasPlan = state.plans.some(function(p){ return p.date === ds; });
+    var isToday = ds === todayStr();
+    var isSelected = ds === calSelected;
+    var cls = (isSelected?'selected ':'') + (isToday?'today ':'');
+    html += '<button class="cal-cell ' + cls + '" onclick="selectDate(\'' + ds + '\')">' +
+      '<div class="cal-num">' + c.getDate() + '</div>' +
+      '<div class="cal-dots">' +
+      (hasRec ? '<div class="cal-dot"></div>' : '') +
+      (hasPlan ? '<div class="cal-dot plan"></div>' : '') +
+      '</div></button>';
+  });
+  html += '</div>';
+  
+  html += '<div class="cal-legend">' +
+    '<div class="legend-item"><div class="legend-dot"></div>실적</div>' +
+    '<div class="legend-item"><div class="legend-dot plan"></div>계획</div>' +
+    '</div>';
+  
+  var selRecs = state.records.filter(function(r){ return r.date === calSelected; });
+  var selPlans = state.plans.filter(function(p){ return p.date === calSelected; });
+  
+  html += '<div class="detail-section"><div class="detail-head">' +
+    '<div><div class="section-sub">선택한 날짜</div><div class="detail-date">' + calSelected.replace(/-/g,'.') + '</div></div>' +
+    '<button class="btn-add-plan" onclick="openPlanModal()">' + iconSvg('ui-plus', 'icon-sm') + '계획추가</button>' +
+    '</div>';
+  
+  if (selPlans.length > 0) {
+    html += '<div class="section-sub" style="margin-bottom:10px;font-weight:700;">계획</div>';
+    selPlans.forEach(function(p){
+      var ex = state.exercises.find(function(e){ return e.id === p.exerciseId; });
+      if (!ex) return;
+      html += '<div class="list-item" style="background:#ebe6d8;">' +
+        '<div class="list-left"><span class="list-icon">' + iconSvg(ex.icon) + '</span>' +
+        '<div><div class="list-name">' + esc(ex.name) + '</div><div class="list-time">' + p.amount + ' ' + esc(ex.unit) + '</div></div></div>' +
+        '<button class="btn-icon" onclick="deletePlan(\'' + p.id + '\')">' + iconSvg('ui-x', 'icon-sm') + '</button></div>';
+    });
+  }
+  
+  if (selRecs.length > 0) {
+    html += '<div class="section-sub" style="margin-bottom:10px;margin-top:14px;font-weight:700;">실적</div>';
+    selRecs.forEach(function(r){
+      var ex = state.exercises.find(function(e){ return e.id === r.exerciseId; });
+      if (!ex) return;
+      html += '<div class="list-item">' +
+        '<div class="list-left"><span class="list-icon">' + iconSvg(ex.icon) + '</span>' +
+        '<div class="list-name">' + esc(ex.name) + '</div></div>' +
+        '<div class="list-amount">' + r.amount + '<span class="summary-unit">' + esc(ex.unit) + '</span></div>' +
+        '</div>';
+    });
+  }
+  
+  if (selRecs.length === 0 && selPlans.length === 0) {
+    html += '<div class="text-center muted" style="padding:24px;">— 기록/계획 없음 —</div>';
+  }
+  
+  html += '</div>';
+  return html;
+}
+
+function setCalView(v) { calView = v; render(); }
+function calPrev() {
+  if (calView === 'month') calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth()-1, 1);
+  else calCursor = addDays(calCursor, -7);
+  render();
+}
+function calNext() {
+  if (calView === 'month') calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth()+1, 1);
+  else calCursor = addDays(calCursor, 7);
+  render();
+}
+function selectDate(ds) { calSelected = ds; render(); }
+
+function deletePlan(id) {
+  if (!confirm('계획을 삭제할까요?')) return;
+  state.plans = state.plans.filter(function(p){ return p.id !== id; });
+  save(); render();
+}
+
+function openPlanModal() {
+  var sel = state.exercises[0];
+  var opts = state.exercises.map(function(e){
+    return '<option value="' + esc(e.id) + '">' + esc(e.name) + '</option>';
+  }).join('');
+  modalHtml = '<div class="modal-bg" onclick="if(event.target===this)closeModal()">' +
+    '<div class="modal">' +
+    '<div class="modal-eyebrow">계획 추가</div>' +
+    '<div class="modal-title">' + calSelected.replace(/-/g,'.') + '</div>' +
+    '<label class="field-label">운동</label>' +
+    '<select id="planEx" onchange="updatePlanUnit()">' + opts + '</select>' +
+    '<label class="field-label">운동량</label>' +
+    '<div class="input-row">' +
+    '<input type="number" inputmode="decimal" id="planAmt" placeholder="0">' +
+    '<div class="unit-box" id="planUnit">' + (sel ? esc(sel.unit) : '') + '</div>' +
+    '</div>' +
+    '<div class="btn-row" style="margin-top:18px;">' +
+    '<button class="btn btn-outline" onclick="closeModal()">취소</button>' +
+    '<button class="btn" onclick="savePlan()">저장</button>' +
+    '</div></div></div>';
+  render();
+}
+
+function updatePlanUnit() {
+  var sel = document.getElementById('planEx');
+  var ex = state.exercises.find(function(e){ return e.id === sel.value; });
+  document.getElementById('planUnit').textContent = ex ? ex.unit : '';
+}
+
+function savePlan() {
+  var exId = document.getElementById('planEx').value;
+  var amt = parseFloat(document.getElementById('planAmt').value);
+  if (!exId || isNaN(amt) || amt <= 0) { alert('운동과 운동량을 올바르게 입력하세요'); return; }
+  state.plans.push({ id: 'p' + Date.now(), exerciseId: exId, amount: amt, date: calSelected });
+  save(); closeModal();
+}
+
+function closeModal() {
+  modalHtml = null;
+  document.querySelectorAll('.modal-bg').forEach(function(m){ m.remove(); });
+  render();
+}
+
+function renderExercises() {
+  var html = '<div class="section-label"><span class="section-num">01</span><span class="section-title">SYNC</span><span class="section-sub">— Google Drive 동기화</span></div>';
+  
+  var connected = !!accessToken;
+  html += '<div class="sync-card">';
+  html += '<div class="sync-status-row">' +
+    '<div class="sync-status-icon ' + (connected?'connected':'disconnected') + '">' +
+    iconSvg(connected ? 'ui-cloud' : 'ui-cloud-off', 'icon-lg') +
+    '</div>' +
+    '<div class="sync-status-text">' +
+    '<div class="sync-status-title">' + (connected ? 'Google Drive 연결됨' : '연결되지 않음') + '</div>' +
+    '<div class="sync-status-sub">' + (connected ? '데이터가 자동으로 클라우드에 저장됩니다' : '연결하면 영구 보관됩니다') + '</div>' +
+    '</div></div>';
+  
+  if (connected) {
+    html += '<div class="btn-row">' +
+      '<button class="btn btn-outline" onclick="manualSync()">' + iconSvg('ui-refresh', 'icon-sm') + '지금 동기화</button>' +
+      '<button class="btn btn-outline" onclick="disconnectDrive()">' + iconSvg('ui-logout', 'icon-sm') + '연결 해제</button>' +
+      '</div>';
+  } else {
+    html += '<button class="btn btn-google" onclick="connectDrive()">' + iconSvg('ui-cloud', 'icon-sm') + 'Google Drive 연결</button>';
+  }
+  html += '</div>';
+  
+  html += '<div class="divider"></div>';
+  
+  html += '<div class="section-label"><span class="section-num">02</span><span class="section-title">EXERCISES</span><span class="section-sub">— 운동 종류 관리</span></div>';
+  html += '<button class="btn" onclick="openExModal()" style="margin-bottom:18px;">' + iconSvg('ui-plus', 'icon-sm') + '새 운동 추가</button>';
+  
+  state.exercises.forEach(function(ex){
+    html += '<div class="exercise-list-item">' +
+      '<div class="ex-info"><span class="ex-icon">' + iconSvg(ex.icon, 'icon-lg') + '</span>' +
+      '<div><div class="ex-name">' + esc(ex.name) + '</div><div class="ex-unit">단위 · ' + esc(ex.unit) + '</div></div></div>' +
+      '<div class="btn-row">' +
+      '<button class="btn-sm" onclick="openExModal(\'' + ex.id + '\')">편집</button>' +
+      '<button class="btn-sm" onclick="removeExercise(\'' + ex.id + '\')">삭제</button>' +
+      '</div></div>';
+  });
+  
+  html += '<div class="divider"></div>';
+  html += '<div class="section-label"><span class="section-num">03</span><span class="section-title">BACKUP</span><span class="section-sub">— 수동 백업 / 복원</span></div>';
+  html += '<div class="btn-row">' +
+    '<button class="btn btn-outline" onclick="exportData()">' + iconSvg('ui-download', 'icon-sm') + '내보내기</button>' +
+    '<label class="btn btn-outline" style="cursor:pointer;">' + iconSvg('ui-upload', 'icon-sm') + '가져오기' +
+    '<input type="file" accept=".json" style="display:none;" onchange="importData(event)"></label>' +
+    '</div>';
+  html += '<div class="data-info">로컬 저장 · ' + state.records.length + '개 기록 · ' + state.plans.length + '개 계획</div>';
+  return html;
+}
+
+function openExModal(id) {
+  var f;
+  if (id) {
+    var ex = state.exercises.find(function(e){ return e.id === id; });
+    f = { id: id, name: ex.name, unit: ex.unit, icon: ex.icon, manualIcon: true };
+  } else {
+    f = { id: null, name: '', unit: '', icon: 'i-default', manualIcon: false };
+  }
+  editForm = f;
+  renderExModal();
+}
+
+function renderExModal() {
+  var f = editForm;
+  var allIcons = ['i-default'].concat(ICON_KEYWORDS.map(function(k){ return k.icon; }));
+  var seen = {}; var iconList = [];
+  allIcons.forEach(function(ic){ if (!seen[ic]) { seen[ic]=1; iconList.push(ic); } });
+  
+  var grid = iconList.map(function(ic){
+    return '<button class="icon-btn ' + (ic===f.icon?'active':'') + '" onclick="pickIcon(\'' + ic + '\')">' + iconSvg(ic) + '</button>';
+  }).join('');
+  
+  modalHtml = '<div class="modal-bg" onclick="if(event.target===this)closeModal()">' +
+    '<div class="modal">' +
+    '<div class="modal-eyebrow">' + (f.id?'운동 편집':'운동 추가') + '</div>' +
+    '<div class="modal-title">' + (f.id?'운동 정보 수정':'새 운동 등록') + '</div>' +
+    '<label class="field-label">이름</label>' +
+    '<input type="text" id="exName" value="' + esc(f.name) + '" placeholder="예: 런닝, 푸쉬업, 자전거" oninput="onNameInput(this.value)">' +
+    '<label class="field-label">단위</label>' +
+    '<input type="text" id="exUnit" value="' + esc(f.unit) + '" placeholder="예: km, 개, 분, 세트">' +
+    '<label class="field-label">아이콘 <span style="font-weight:500;color:#8a8678;font-size:11px;">(이름에 맞춰 자동 선택됩니다)</span></label>' +
+    '<div class="icon-grid" id="iconGrid">' + grid + '</div>' +
+    '<div class="btn-row" style="margin-top:20px;">' +
+    '<button class="btn btn-outline" onclick="closeModal()">취소</button>' +
+    '<button class="btn" onclick="saveExercise()">저장</button>' +
+    '</div></div></div>';
+  render();
+}
+
+function onNameInput(val) {
+  if (!editForm.manualIcon) {
+    var newIcon = autoIcon(val);
+    if (newIcon !== editForm.icon) {
+      editForm.icon = newIcon;
+      document.querySelectorAll('#iconGrid .icon-btn').forEach(function(b){
+        var use = b.querySelector('use');
+        var ref = use ? use.getAttribute('href').substring(1) : '';
+        b.classList.toggle('active', ref === newIcon);
+      });
+    }
+  }
+}
+
+function pickIcon(ic) {
+  editForm.icon = ic;
+  editForm.manualIcon = true;
+  document.querySelectorAll('#iconGrid .icon-btn').forEach(function(b){
+    var use = b.querySelector('use');
+    var ref = use ? use.getAttribute('href').substring(1) : '';
+    b.classList.toggle('active', ref === ic);
+  });
+}
+
+function saveExercise() {
+  var name = document.getElementById('exName').value.trim();
+  var unit = document.getElementById('exUnit').value.trim();
+  if (!name || !unit) { alert('이름과 단위를 입력하세요'); return; }
+  var icon = editForm.manualIcon ? editForm.icon : autoIcon(name);
+  if (editForm.id) {
+    state.exercises = state.exercises.map(function(e){
+      return e.id === editForm.id ? Object.assign({}, e, {name: name, unit: unit, icon: icon}) : e;
+    });
+  } else {
+    state.exercises.push({ id: 'e' + Date.now(), name: name, unit: unit, icon: icon });
+  }
+  save(); closeModal();
+}
+
+function removeExercise(id) {
+  var ex = state.exercises.find(function(e){ return e.id === id; });
+  var usage = state.records.filter(function(r){ return r.exerciseId === id; }).length;
+  var msg = usage > 0
+    ? '"' + ex.name + '" 운동을 삭제하면 관련 기록 ' + usage + '건도 함께 삭제됩니다. 계속할까요?'
+    : '"' + ex.name + '" 운동을 삭제할까요?';
+  if (!confirm(msg)) return;
+  state.exercises = state.exercises.filter(function(e){ return e.id !== id; });
+  state.records = state.records.filter(function(r){ return r.exerciseId !== id; });
+  state.plans = state.plans.filter(function(p){ return p.exerciseId !== id; });
+  save(); render();
+}
+
+function exportData() {
+  var blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'workout_backup_' + todayStr() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    try {
+      var imp = JSON.parse(ev.target.result);
+      if (!imp.exercises || !imp.records) throw new Error('형식 오류');
+      if (!confirm('기존 데이터를 모두 덮어씁니다. 계속할까요?')) return;
+      imp.exercises = imp.exercises.map(function(e){
+        if (!e.icon) e.icon = autoIcon(e.name);
+        return e;
+      });
+      state = { exercises: imp.exercises, records: imp.records, plans: imp.plans || [], lastModified: Date.now() };
+      save(); render();
+      alert('가져오기 완료');
+    } catch (err) { alert('파일 오류: ' + err.message); }
+  };
+  reader.readAsText(file);
+}
+
+document.querySelectorAll('.nav-btn').forEach(function(b){
+  b.addEventListener('click', function(){
+    currentTab = b.dataset.tab;
+    voiceText = ''; parsed = null; voiceError = ''; voiceStatus = 'idle';
+    if (recog) try { recog.stop(); } catch(e){}
+    render();
+  });
+});
+
+renderHeader();
+render();
+</script>
+
+</body>
+</html>
