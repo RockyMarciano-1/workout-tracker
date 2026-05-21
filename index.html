@@ -94,6 +94,10 @@ main { padding: 22px; }
 .tab { padding: 13px 8px; background: white; border: none; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; color: #1a1a1a; display: flex; align-items: center; justify-content: center; gap: 6px; }
 .tab.active { background: #1a1a1a; color: white; }
 
+.log-date-card { background: white; border: 2px solid #1a1a1a; padding: 14px; margin-bottom: 14px; border-radius: 2px; box-shadow: 2px 2px 0 #1a1a1a; }
+.log-date-card label.field-label { margin-top: 0; }
+.log-date-hint { margin-top: 8px; font-size: 12px; color: #8a8678; font-weight: 500; }
+
 label.field-label { display: block; font-size: 12px; letter-spacing: 0.1em; color: #555; font-weight: 700; margin-bottom: 6px; margin-top: 14px; }
 input, select, textarea { width: 100%; padding: 14px; border: 2px solid #1a1a1a; background: white; font-size: 16px; font-family: inherit; color: #1a1a1a; border-radius: 2px; }
 input:focus, select:focus { outline: none; }
@@ -308,6 +312,7 @@ var FILEID_KEY = 'workout_drive_fileid';
 
 var state = loadState();
 var currentTab = 'today';
+var logDate = todayStr();
 var logMode = 'voice';
 var voiceText = '';
 var parsed = null;
@@ -637,6 +642,25 @@ function endOfMonth(d) { return new Date(d.getFullYear(), d.getMonth()+1, 0); }
 function startOfWeek(d) { var x = new Date(d); x.setDate(x.getDate() - x.getDay()); return x; }
 function nowTime() { var d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
 
+function isValidDateStr(s) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s || '')) return false;
+  var d = parseDateStr(s);
+  return !isNaN(d.getTime()) && fmtDate(d) === s;
+}
+
+function getLogDate() {
+  var el = document.getElementById('logDate');
+  var v = el && el.value ? el.value : logDate;
+  logDate = isValidDateStr(v) ? v : todayStr();
+  return logDate;
+}
+
+function setLogDate(v) {
+  logDate = isValidDateStr(v) ? v : todayStr();
+  var el = document.getElementById('logDate');
+  if (el) el.value = logDate;
+}
+
 function renderHeader() {
   var d = new Date();
   var days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
@@ -775,7 +799,13 @@ function deleteRecord(id) {
 }
 
 function renderLog() {
+  var selectedLogDate = getLogDate();
   var html = '<div class="section-label"><span class="section-num">01</span><span class="section-title">INPUT</span><span class="section-sub">— 운동 기록 입력</span></div>';
+  html += '<div class="log-date-card">' +
+    '<label class="field-label" for="logDate">기록 날짜</label>' +
+    '<input type="date" id="logDate" value="' + esc(selectedLogDate) + '" onchange="setLogDate(this.value)">' +
+    '<div class="log-date-hint">선택한 날짜로 음성/수동 기록이 저장됩니다.</div>' +
+    '</div>';
   html += '<div class="tabs">' +
     '<button class="tab ' + (logMode==='voice'?'active':'') + '" onclick="setLogMode(\'voice\')">' + iconSvg('ui-mic', 'icon-sm') + '음성</button>' +
     '<button class="tab ' + (logMode==='manual'?'active':'') + '" onclick="setLogMode(\'manual\')">' + iconSvg('ui-edit', 'icon-sm') + '수동입력</button>' +
@@ -862,14 +892,16 @@ function toggleVoice() {
 
 function saveVoice() {
   if (!parsed) return;
+  var selectedDate = getLogDate();
   state.records.push({
     id: 'r' + Date.now(),
     exerciseId: parsed.exerciseId,
     amount: parsed.amount,
-    date: todayStr(),
+    date: selectedDate,
     time: nowTime()
   });
-  var msg = '저장됨: ' + parsed.name + ' ' + parsed.amount + parsed.unit;
+  calSelected = selectedDate;
+  var msg = '저장됨 (' + selectedDate.replace(/-/g, '.') + '): ' + parsed.name + ' ' + parsed.amount + parsed.unit;
   voiceText=''; parsed=null; voiceError=''; save(); render();
   alert(msg);
 }
@@ -883,16 +915,18 @@ function saveManual() {
     msgEl.innerHTML = '<div class="success-msg">올바른 운동량을 입력하세요</div>';
     return;
   }
+  var selectedDate = getLogDate();
   var ex = state.exercises.find(function(e){ return e.id === exId; });
   state.records.push({
     id: 'r' + Date.now(),
     exerciseId: exId,
     amount: num,
-    date: todayStr(),
+    date: selectedDate,
     time: nowTime()
   });
+  calSelected = selectedDate;
   save();
-  msgEl.innerHTML = '<div class="success-msg">✓ ' + esc(ex.name) + ' ' + num + esc(ex.unit) + ' 저장됨</div>';
+  msgEl.innerHTML = '<div class="success-msg">✓ ' + selectedDate.replace(/-/g, '.') + ' · ' + esc(ex.name) + ' ' + num + esc(ex.unit) + ' 저장됨</div>';
   document.getElementById('manualAmt').value = '';
   setTimeout(function(){ if (currentTab==='log') render(); }, 1500);
 }
